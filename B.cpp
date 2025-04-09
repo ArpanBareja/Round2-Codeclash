@@ -14,40 +14,41 @@ vll isPrime(exp+1,1);
 vector<ll> robots;
 set<pair<ll, ll>> stores;
 
-void createSieve(){
-   isPrime[0]=0 , isPrime[1] = 0 ;
-   for(ll i = 2 ; i*i <= exp ; i++){
-       if(isPrime[i])
-       {
-          for(ll j = i*i ; j<=exp ; j+=i)
-            isPrime[j] = 0 ;
-       }
-   }
-}
+ll matchRobot(int idx, set<pair<ll, ll>>& remStores) {
+    if (idx >= robots.size()) return 0;
 
-vector<ll> zFunction(string &str) {
-    ll n = str.length();
-    vector<ll> z(n, 0);
+    ll robot_pos = robots[idx];
+    ll max_profit = 0;
+    auto best_it = remStores.end();
 
-    ll l = 0, r = 0;
-    for (ll i = 1; i < n; i++) {
-        if (i <= r) {
-            z[i] = min(z[i - l], r - i + 1);
-        }
+    auto it = remStores.lower_bound({robot_pos, 0});
 
-        while (str[z[i]] == str[z[i] + i]) {
-            z[i]++;
-        }
-
-        if (z[i] + i - 1 > r) {
-            l = i;
-            r = i + z[i] - 1;
+    if (it != remStores.end()) {
+        ll dist = abs(it->first - robot_pos);
+        ll profit = it->second - dist;
+        if (profit > max_profit) {
+            max_profit = profit;
+            best_it = it;
         }
     }
 
-    return z;
-}
+    if (it != remStores.begin()) {
+        auto prev_it = prev(it);
+        ll dist = abs(prev_it->first - robot_pos);
+        ll profit = prev_it->second - dist;
+        if (profit > max_profit) {
+            max_profit = profit;
+            best_it = prev_it;
+        }
+    }
 
+    if (best_it != remStores.end() && max_profit > 0) {
+        remStores.erase(best_it);
+        return max_profit + matchRobot(idx + 1, remStores);
+    }
+
+    return matchRobot(idx + 1, remStores);
+}
 
 void solve() {
     ll t, x, c = 0;
@@ -59,44 +60,9 @@ void solve() {
         stores.insert({x, c});
     }
 
-    ll profit_today = 0;
     set<pair<ll, ll>> remStores = stores;
-
-    for (ll robot_pos : robots) {
-        ll max_profit = 0;
-        auto best_it = remStores.end();
-
-        auto it = remStores.lower_bound({robot_pos, 0});
-
-        if (it != remStores.end()) {
-            ll dist = abs(it->first - robot_pos);
-            ll profit = it->second - dist;
-            if (profit > max_profit) {
-                max_profit = profit;
-                best_it = it;
-            }
-        }
-
-        
-        if (it != remStores.begin()) {
-            auto prev_it = prev(it);
-            ll dist = abs(prev_it->first - robot_pos);
-            ll profit = prev_it->second - dist;
-            if (profit > max_profit) {
-                max_profit = profit;
-                best_it = prev_it;
-            }
-        }
-
-        if (best_it != remStores.end() && max_profit > 0) {
-            profit_today += max_profit;
-            remStores.erase(best_it);
-        }
-    }
-
-    cout << profit_today << endl;
-
-
+    ll total_profit = matchRobot(0, remStores);
+    cout << total_profit << endl ;
 }
 
 int main()
