@@ -62,7 +62,7 @@ void solve() {
 
     set<pair<ll, ll>> remStores = stores;
     ll total_profit = matchRobot(0, remStores);
-    cout << total_profit << endl ;
+    cout << total_profit << '\n';
 }
 
 int main()
